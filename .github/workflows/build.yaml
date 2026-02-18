@@ -1,12 +1,14 @@
 name: Build
 on:
-  - workflow_dispatch
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: windows-latest
     steps:
       - name: Check out git repository
         uses: actions/checkout@v4
+      
       - name: Get latest version
         shell: pwsh
         run: |
@@ -15,15 +17,15 @@ jobs:
           $7zVer = $7zVerMatchInfo.Matches.Groups[1].Value.Replace('.', '')
           Set-Content -Path 7zVer.txt -Value "7z$7zVer"
           Write-Output "The latest version of 7-Zip is 7z$7zVer."
-      - name: Prepare
+
+      # 这里是修改后的核心步骤
+      - name: Run AutoBuild
         shell: pwsh
-        run: Get-Content -Path 7zVer.txt | .\Prepare.ps1
-      - name: Build
-        shell: pwsh
-        run: Get-Content -Path 7zVer.txt | .\Build.ps1
-      - name: Pack
-        shell: pwsh
-        run: Get-Content -Path 7zVer.txt | .\Pack.ps1
+        run: |
+          $Ver = Get-Content -Path 7zVer.txt
+          # 调用仓库里真实存在的那个主脚本
+          .\AutoBuild.ps1 $Ver
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
